@@ -1,0 +1,14 @@
+{
+	"folder1/new.txt": {
+		"tags": [],
+		"group": null
+	},
+	"folder2/1.docx": {
+		"tags": [],
+		"group": null
+	},
+	"folder2/subfolder/test.txt": {
+		"tags": [],
+		"group": null
+	}
+}
