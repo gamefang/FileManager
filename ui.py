@@ -18,7 +18,7 @@ class UIFileManager(object):
         # 窗体创建
         self.wd = Tk()
         self.wd.title('文件管理工具')
-        self.wd.geometry('1280x600+0+20')
+        self.wd.geometry('1024x600+0+20')
 
         # 字符串变量：当前目录名
         self.cur_folder = StringVar(self.wd)
@@ -27,18 +27,25 @@ class UIFileManager(object):
                                fg='purple',
                                font=('arial', 12, 'bold'),
                                )
-        self.lb_cur_fp.place(x=519,y=5)
+        self.lb_cur_fp.place(x=450,y=5)
 
         # 输入框：手动输入路径及提示框
         self.en_fp = Entry(self.wd,
-                           width=100,   # 输入框宽
+                           width=66,   # 输入框宽
                            textvariable=self.cur_folder,    # 链接当前目录名
                            )
         self.en_fp.bind('<Return>',
                         self.update_list,   # 回车后执行update_list
                         )
-        self.en_fp.place(x=519,y=50)
+        self.en_fp.place(x=480,y=50)
 
+        # 按钮：向上一层
+        self.btn_prev = Button(text='<',
+                               command=self.go_prev,
+                               activebackground='blue',
+                               )
+        self.btn_prev.place(x=450,y=45)
+        
         # 框架：路径框架
         self.fm_fps = Frame(self.wd)
         # 滚动条：在这里是对列表框提供滚动功能
@@ -46,8 +53,8 @@ class UIFileManager(object):
         self.sb_fps.pack(side=RIGHT, fill=Y)
         # 列表框：显示路径下所有文件
         self.libo_fps = Listbox(self.fm_fps,
-                                height=15,  # 列表框高
-                                width=100,  # 列表框宽
+                                height=20,  # 列表框高
+                                width=70,  # 列表框宽
                                 yscrollcommand=self.sb_fps.set, # 接收竖直滚动条滚动
                                 )
         self.libo_fps.bind('<Double-1>',
@@ -55,22 +62,15 @@ class UIFileManager(object):
                            )
         self.sb_fps.config(command=self.libo_fps.yview)  # 执行竖直滚动条的滚动
         self.libo_fps.pack(side=LEFT, fill=BOTH)
-        self.fm_fps.place(x=519,y=100)
+        self.fm_fps.place(x=450,y=100)
 
         # 按钮：打开所选文件
         self.btn_open = Button(text='打开',
                                command=self.open_file,
-                               activeforeground='white',
                                activebackground='blue',
+                               font=('simhei', 18),
                                )
-        self.btn_open.place(x=519,y=500)
-        # 按钮：向上一层
-        self.btn_prev = Button(text='向上',
-                               command=self.go_prev,
-                               activeforeground='white',
-                               activebackground='blue',
-                               )
-        self.btn_prev.place(x=600,y=500)
+        self.btn_open.place(x=450,y=480)
 
         # 设定初始路径
         if initdir:
