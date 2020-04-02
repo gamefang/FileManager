@@ -52,6 +52,14 @@ class UIFileManager(FileManager):
         self.cbtn_recur.place(x=self.UI_LEFT_BASE_X,
                               y=self.UI_BASE_Y,
                               )
+        # 标签：标签文字
+        self.lb_tags_name = Label(self.wd,
+                                  text='标签',
+                                  font = self.STYLE_LABEL_FONT,
+                                  )
+        self.lb_tags_name.place(x=self.UI_LEFT_BASE_X,
+                                y=self.UI_BASE_Y+40,
+                                )
 
         ################## 右侧 ##################
         # 字符串变量：当前目录名（相对路径）
@@ -96,6 +104,9 @@ class UIFileManager(FileManager):
                                 width=70,  # 列表框宽
                                 yscrollcommand=self.sb_fps.set, # 接收竖直滚动条滚动
                                 )
+        self.libo_fps.bind('<ButtonRelease-1>',
+                           self.show_cur_file,    # 鼠标单击列表框任一行内容，显示当前文件信息
+                           )
         self.libo_fps.bind('<Double-1>',
                            self.change_dir,    # 鼠标双击列表框任一行内容，回调change_dir
                            )
@@ -125,7 +136,11 @@ class UIFileManager(FileManager):
         '''
         当前选定的文件路径
         '''
-        return self.libo_fps.get(self.libo_fps.curselection()) or os.curdir
+        selection = self.libo_fps.curselection()
+        if selection:
+            return self.libo_fps.get(selection)
+        else:
+            return os.curdir
 
     def msg(self,content,show_time=0):
         '''
@@ -163,6 +178,21 @@ class UIFileManager(FileManager):
         os.startfile(self.cur_selection)
         print('open: ',os.path.abspath(self.cur_selection))
 
+    def show_cur_file(self, ev=None):
+        '''
+        列表框libo_fps单击的回调函数：显示当前文件信息
+        '''
+        full_path = os.path.abspath(self.cur_selection)
+        path_key = self.path_to_key(full_path)
+        infos = self.data.get(path_key)
+        if infos:
+            tags = infos.get('tags')
+            if tags:
+                tags_tip = '标签：%s' % ','.join(tags)
+                self.msg(f'{full_path}\n{tags_tip}')
+                return
+        self.msg(full_path)
+
     def change_dir(self, ev=None):
         '''
         列表框libo_fps双击的回调函数：变更当前路径，并切换当前目录
@@ -170,7 +200,6 @@ class UIFileManager(FileManager):
         self.v_cur_folder.set(self.cur_selection)
         self.update_list()
         print('path change to: ',os.path.abspath(os.curdir))
-        self.msg(self.data,show_time=3)
 
     def go_prev(self, ev=None):
         '''

@@ -1,14 +1,18 @@
 {
-	"folder1/new.txt": {
-		"tags": [],
+	"试验|测试.txt": {
+		"tags": ["test","汉字"],
 		"group": null
 	},
-	"folder2/1.docx": {
-		"tags": [],
+	"folder1|new.txt": {
+		"tags": ["test"],
 		"group": null
 	},
-	"folder2/subfolder/test.txt": {
-		"tags": [],
+	"folder2|1.docx": {
+		"tags": ["test","word"],
+		"group": null
+	},
+	"folder2|subfolder|test.txt": {
+		"tags": ["test"],
 		"group": null
 	}
 }

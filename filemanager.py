@@ -17,6 +17,7 @@ class FileManager(object):
     UI_RIGHT_BASE_X = 450
     UI_BASE_Y = 60
     # 默认样式
+    STYLE_LABEL_FONT = ('simhei', 16)
     STYLE_BTN_FONT = ('simhei', 18)
     STYLE_CBTN_FONT = ('simhei', 16)
 
@@ -36,9 +37,26 @@ class FileManager(object):
         with open(self.DATA_FILE,'w',encoding='utf-8') as file:
             json.dump(data,file)
 
-    def get_rel_path(self,full_path):
+    def path_to_key(self,full_path):
         '''
-        根据绝对路径，获取相对路径
+        根据绝对路径，获取与json字典对应的路径索引key
         @param full_path: 文件的绝对路径
+        @return: 返回适用于json字典索引的路径，以|分隔
         '''
-        return os.path.relpath(full_path,self.BASE_FULL_PATH)
+        rel_path = os.path.relpath(full_path,self.BASE_FULL_PATH)
+        if '/' in rel_path:
+            li = rel_path.split('/')
+        elif '\\' in rel_path:
+            li = rel_path.split('\\')
+        else:
+            return rel_path
+        return '|'.join(li)
+
+    def key_to_path(self,path_key):
+        '''
+        根据json字典的索引key，返回绝对路径
+        @param path_key: 以|分隔的相对路径
+        @return: 绝对路径
+        '''
+        rel_path = path_key.replace('|','/')
+        return os.path.abspath(rel_path)
