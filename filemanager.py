@@ -20,6 +20,7 @@ class FileManager(object):
     STYLE_LABEL_FONT = ('simhei', 16)
     STYLE_BTN_FONT = ('simhei', 18)
     STYLE_CBTN_FONT = ('simhei', 16)
+    STYLE_NORMAL_FONT = ('simhei', 12)
 
     def load_data(self):
         '''
