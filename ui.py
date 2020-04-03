@@ -12,7 +12,7 @@ class UIFileManager(FileManager):
     文件管理工具UI
     '''
 
-    def __init__(self, initdir=None, filter_dic={}):
+    def __init__(self,filter_dic={}):
         '''
         初始化UI
         '''
@@ -21,6 +21,8 @@ class UIFileManager(FileManager):
         self.data = self.file_manager.load_data()   # 加载json对象
         # 文件过滤信息的字典
         self.filter_dic = filter_dic
+
+        ################## UI初始化 ##################
         # 窗体创建
         self.wd = Tk()
         self.wd.title('文件管理工具')
@@ -97,6 +99,15 @@ class UIFileManager(FileManager):
         self.fm_tags.place(x=self.UI_LEFT_BASE_X,
                            y=self.UI_BASE_Y + 80,
                            )
+        # 按钮：标签修改
+        self.btn_tags_mod = Button(text='修改',
+                                   command=self.modify_tags,
+                                   activebackground='blue',
+                                   font=self.STYLE_BTN_FONT,
+                                   )
+        self.btn_tags_mod.place(x=self.UI_LEFT_BASE_X,
+                                y=self.UI_BASE_Y + 350,
+                                )
 
         ##### 标签页：类型 #####
 
@@ -114,6 +125,7 @@ class UIFileManager(FileManager):
         ################## 右侧 ##################
         # 字符串变量：当前目录名（相对路径）
         self.v_cur_folder = StringVar(self.wd)
+        self.v_cur_folder.set(os.curdir)
         # 标签：当前文件目录路径
         self.lb_cur_fp = Label(self.wd,
                                fg='purple',
@@ -153,7 +165,7 @@ class UIFileManager(FileManager):
                                 height = 20,  # 列表框高
                                 width = 65,  # 列表框宽
                                 yscrollcommand=self.sb_fps.set, # 接收竖直滚动条滚动
-                                font=self.STYLE_NORMAL_FONT,    # 可多选 TODO 多选忽略交互
+                                font=self.STYLE_NORMAL_FONT,    # 可多选
                                 selectmode = EXTENDED,
                                 )
         self.libo_fps.bind('<ButtonRelease-1>',
@@ -167,6 +179,7 @@ class UIFileManager(FileManager):
         self.fm_fps.place(x=self.UI_RIGHT_BASE_X,
                           y=self.UI_BASE_Y + 80,
                           )
+        self.update_list()  # 文件列表初始化刷新
 
         # 按钮：打开所选文件
         self.btn_open = Button(text='打开',
@@ -178,21 +191,21 @@ class UIFileManager(FileManager):
                             y=self.UI_BASE_Y + 460,
                             )
 
-        # 设定初始路径
-        if initdir:
-            self.v_cur_folder.set(os.curdir)
-            self.update_list()
+    @property
+    def cur_select_files(self):
+        '''
+        当前选定的文件路径列表
+        '''
+        selections = self.libo_fps.curselection()
+        return [self.libo_fps.get(item) for item in selections]
 
     @property
-    def cur_selection(self):
+    def cur_select_single_file(self):
         '''
-        当前选定的文件路径
+        返回单独的选定文件(第一个)或空
         '''
-        selection = self.libo_fps.curselection()
-        if selection:
-            return self.libo_fps.get(selection)
-        else:
-            return os.curdir
+        if self.cur_select_files:
+            return self.cur_select_files[0]
 
     def msg(self,content,show_time=0):
         '''
@@ -221,6 +234,7 @@ class UIFileManager(FileManager):
         # 隐藏所有sheet页元素
         self.fm_tags.place_forget()
         self.cbtn_recur.place_forget()
+        self.btn_tags_mod.place_forget()
         # 展示本sheet页元素
         sheet_num = self.v_sheet.get()
         if sheet_num == 0:  # 标签页
@@ -245,32 +259,38 @@ class UIFileManager(FileManager):
 
     def open_file(self, ev=None):
         '''
-        按钮btn_open的回调函数：打开所选文件
+        按钮btn_open的回调函数：打开所选文件(多选打开第一个)
         '''
-        os.startfile(self.cur_selection)
-        print('open: ',os.path.abspath(self.cur_selection))
+        fn = self.cur_select_single_file
+        if fn:
+            os.startfile(fn)
+            print('open: ',os.path.abspath(fn))
 
     def show_cur_file(self, ev=None):
         '''
-        列表框libo_fps单击的回调函数：显示当前文件信息
+        列表框libo_fps单击的回调函数：显示当前文件信息(多选显示第一个)
         '''
-        full_path = os.path.abspath(self.cur_selection)
-        path_key = self.path_to_key(full_path)
-        self.libo_tags.delete(0, END)   # 清空标签信息
-        infos = self.data.get(path_key)
-        if infos:
-            tags = infos.get('tags')
-            for tag in tags:
-                self.libo_tags.insert(END, tag)
-        self.msg(full_path)
+        fn = self.cur_select_single_file
+        if fn:
+            full_path = os.path.abspath(fn)
+            path_key = self.path_to_key(full_path)
+            self.libo_tags.delete(0, END)   # 清空标签信息
+            infos = self.data.get(path_key)
+            if infos:
+                tags = infos.get('tags')
+                for tag in tags:
+                    self.libo_tags.insert(END, tag)
+            self.msg(full_path)
 
     def change_dir(self, ev=None):
         '''
         列表框libo_fps双击的回调函数：变更当前路径，并切换当前目录
         '''
-        self.v_cur_folder.set(self.cur_selection)
-        self.update_list()
-        print('path change to: ',os.path.abspath(os.curdir))
+        fn = self.cur_select_single_file
+        if fn:
+            self.v_cur_folder.set(fn)
+            self.update_list()
+            print('path change to: ',os.path.abspath(os.curdir))
 
     def go_prev(self, ev=None):
         '''
@@ -278,6 +298,12 @@ class UIFileManager(FileManager):
         '''
         self.v_cur_folder.set(os.pardir)
         self.update_list()
+
+    def modify_tags(self):
+        '''
+        按钮btn_tags_mod的回调函数：修改标签
+        '''
+        pass    # TODO
 
     def update_list(self, ev=None, exts=['pdf']):
         '''
@@ -311,5 +337,5 @@ class UIFileManager(FileManager):
 
 
 if __name__ == "__main__":
-    fm = UIFileManager(os.curdir,filter_dic={})
+    fm = UIFileManager()
     mainloop()
