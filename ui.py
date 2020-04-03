@@ -79,7 +79,7 @@ class UIFileManager(FileManager):
                                    y=self.UI_BASE_Y,
                                    )
 
-        ##### 标签页：标签 #####
+        ##### 标签页：标签 #####  # TODO Frame化
         # 框架：标签框架
         self.fm_tags = Frame(self.wd)
         # 滚动条：在这里是对标签提供滚动功能
@@ -99,6 +99,17 @@ class UIFileManager(FileManager):
         self.fm_tags.place(x=self.UI_LEFT_BASE_X,
                            y=self.UI_BASE_Y + 80,
                            )
+        
+        # 字符串变量：当前文件标签
+        self.v_cur_file_tags = StringVar()
+        # 输入框：当前文件标签
+        self.en_tags = Entry(self.wd,
+                             width=35,   # 输入框宽
+                             textvariable=self.v_cur_file_tags,
+                             )
+        self.en_tags.place(x=self.UI_LEFT_BASE_X,
+                           y=self.UI_BASE_Y + 350,
+                           )
         # 按钮：标签修改
         self.btn_tags_mod = Button(text='修改',
                                    command=self.modify_tags,
@@ -106,7 +117,7 @@ class UIFileManager(FileManager):
                                    font=self.STYLE_BTN_FONT,
                                    )
         self.btn_tags_mod.place(x=self.UI_LEFT_BASE_X,
-                                y=self.UI_BASE_Y + 350,
+                                y=self.UI_BASE_Y + 400,
                                 )
 
         ##### 标签页：类型 #####
@@ -235,12 +246,19 @@ class UIFileManager(FileManager):
         self.fm_tags.place_forget()
         self.cbtn_recur.place_forget()
         self.btn_tags_mod.place_forget()
+        self.en_tags.place_forget()
         # 展示本sheet页元素
         sheet_num = self.v_sheet.get()
         if sheet_num == 0:  # 标签页
             self.fm_tags.place(x=self.UI_LEFT_BASE_X,
                                y=self.UI_BASE_Y + 80,
                                )
+            self.en_tags.place(x=self.UI_LEFT_BASE_X,
+                               y=self.UI_BASE_Y + 350,
+                               )
+            self.btn_tags_mod.place(x=self.UI_LEFT_BASE_X,
+                                    y=self.UI_BASE_Y + 400,
+                                    )        
         elif sheet_num == 1:    # 类型页
             pass
         elif sheet_num == 2:    # 设置页
