@@ -99,7 +99,7 @@ class UIFileManager(FileManager):
         self.fm_tags.place(x=self.UI_LEFT_BASE_X,
                            y=self.UI_BASE_Y + 80,
                            )
-        
+
         # 字符串变量：当前文件标签
         self.v_cur_file_tags = StringVar()
         # 输入框：当前文件标签
@@ -213,7 +213,7 @@ class UIFileManager(FileManager):
     @property
     def cur_select_single_file(self):
         '''
-        返回单独的选定文件(第一个)或空
+        返回单独的选定文件(第一个)或空(相对路径)
         '''
         if self.cur_select_files:
             return self.cur_select_files[0]
@@ -258,7 +258,7 @@ class UIFileManager(FileManager):
                                )
             self.btn_tags_mod.place(x=self.UI_LEFT_BASE_X,
                                     y=self.UI_BASE_Y + 400,
-                                    )        
+                                    )
         elif sheet_num == 1:    # 类型页
             pass
         elif sheet_num == 2:    # 设置页
@@ -297,7 +297,10 @@ class UIFileManager(FileManager):
             if infos:
                 tags = infos.get('tags')
                 for tag in tags:
-                    self.libo_tags.insert(END, tag)
+                    self.libo_tags.insert(END, tag) # 标签框
+                self.v_cur_file_tags.set(','.join(tags))    # 标签修改区
+            else:
+                self.v_cur_file_tags.set('')    # 清空标签修改区
             self.msg(full_path)
 
     def change_dir(self, ev=None):
@@ -321,7 +324,22 @@ class UIFileManager(FileManager):
         '''
         按钮btn_tags_mod的回调函数：修改标签
         '''
-        pass    # TODO
+        new_tags = self.v_cur_file_tags.get().split(',')
+        new_tags = [item for item in new_tags if item]  # 去除空项
+        files = self.cur_select_files
+        for file in files:  # 支持批量修改
+            key = self.path_to_key(os.path.abspath(file))
+            if key in self.data:    # 修改已有标签
+                self.data[key]['tags'] = new_tags
+                self.save_data(self.data)    # 保存修改
+                self.show_cur_file()    # 刷新文件显示
+                self.msg(f'文件标签修改为：{new_tags}')
+            else:   # 新增标签存储
+                self.data[key] = {}
+                self.data[key]['tags'] = new_tags
+                self.save_data(self.data)    # 保存修改
+                self.show_cur_file()    # 刷新文件显示
+                self.msg(f'文件新增标签：{new_tags}')
 
     def update_list(self, ev=None, exts=['pdf']):
         '''

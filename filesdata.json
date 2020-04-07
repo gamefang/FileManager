@@ -1,18 +1,44 @@
 {
-	"试验|测试.txt": {
-		"tags": ["test","汉字"],
-		"group": null
-	},
-	"folder1|new.txt": {
-		"tags": ["test"],
-		"group": null
-	},
-	"folder2|1.docx": {
-		"tags": ["test","word"],
-		"group": null
-	},
-	"folder2|subfolder|test.txt": {
-		"tags": ["test"],
-		"group": null
-	}
+  "试验|测试.txt": {
+    "tags": [
+      "test",
+      "汉字",
+      "1"
+    ],
+    "group": null
+  },
+  "folder1|new.txt": {
+    "tags": [
+      "test"
+    ],
+    "group": null
+  },
+  "folder2|1.docx": {
+    "tags": [
+      "test",
+      "word"
+    ],
+    "group": null
+  },
+  "folder2|subfolder|test.txt": {
+    "tags": [
+      "test"
+    ],
+    "group": null
+  },
+  "filemanager.py": {
+    "tags": []
+  },
+  "filesdata.json": {
+    "tags": []
+  },
+  "folder1": {
+    "tags": []
+  },
+  "folder2": {
+    "tags": []
+  },
+  "ui.py": {
+    "tags": []
+  }
 }

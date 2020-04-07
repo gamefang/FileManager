@@ -11,7 +11,7 @@ class FileManager(object):
     # 工具所在基础路径
     BASE_FULL_PATH = os.path.abspath(os.curdir)
     # 信息文件相对路径
-    DATA_FILE = 'filesdata.json'
+    DATA_FILE = os.path.join(BASE_FULL_PATH,'filesdata.json')
     # 左、右侧UI的起始x、y值
     UI_LEFT_BASE_X = 20
     UI_RIGHT_BASE_X = 450
@@ -27,7 +27,7 @@ class FileManager(object):
         加载json字典
         @return: python字典对象
         '''
-        with open(self.DATA_FILE,'r',encoding='utf-8') as file:
+        with open(self.DATA_FILE,'r',encoding='utf8') as file:
             return json.load(file)
 
     def save_data(self,data):
@@ -35,8 +35,13 @@ class FileManager(object):
         存储json字典
         @param data: python字典对象
         '''
-        with open(self.DATA_FILE,'w',encoding='utf-8') as file:
-            json.dump(data,file)
+        with open(self.DATA_FILE,'w',encoding='utf8') as file:
+            json.dump(
+                data,
+                file,
+                indent=2,   # 缩进
+                ensure_ascii=False, # 不转译汉字
+                )
 
     def path_to_key(self,full_path):
         '''
