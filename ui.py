@@ -12,15 +12,12 @@ class UIFileManager(FileManager):
     文件管理工具UI
     '''
 
-    def __init__(self,filter_dic={}):
+    def __init__(self):
         '''
         初始化UI
         '''
-        # 创建文件管理逻辑对象
-        self.file_manager = FileManager()
-        self.data = self.file_manager.load_data()   # 加载json对象
-        # 文件过滤信息的字典
-        self.filter_dic = filter_dic
+        # 继承文件管理逻辑对象
+        super(UIFileManager,self).__init__()
 
         ################## UI初始化 ##################
         # 窗体创建
@@ -78,8 +75,17 @@ class UIFileManager(FileManager):
         self.rbtn_sheet_cfgs.place(x=self.UI_LEFT_BASE_X + 200,
                                    y=self.UI_BASE_Y,
                                    )
+        # 按钮：保存修改
+        self.btn_save_mod = Button(text='保存',
+                                   command=self.save_mod,
+                                   activebackground='blue',
+                                   font=self.STYLE_BTN_FONT,
+                                   )
+        self.btn_save_mod.place(x=self.UI_LEFT_BASE_X + 300,
+                                y=self.UI_BASE_Y,
+                                )
 
-        ##### 标签页：标签 #####  # TODO Frame化
+        ##### 标签页：标签 #####
         # 框架：标签框架
         self.fm_tags = Frame(self.wd)
         # 滚动条：在这里是对标签提供滚动功能
@@ -291,9 +297,8 @@ class UIFileManager(FileManager):
         fn = self.cur_select_single_file
         if fn:
             full_path = os.path.abspath(fn)
-            path_key = self.path_to_key(full_path)
-            self.libo_tags.delete(0, END)   # 清空标签信息
-            infos = self.data.get(path_key)
+            self.libo_tags.delete(0, END)   # 清空标签框
+            infos = self.get_infos(full_path)
             if infos:
                 tags = infos.get('tags')
                 for tag in tags:
@@ -331,15 +336,20 @@ class UIFileManager(FileManager):
             key = self.path_to_key(os.path.abspath(file))
             if key in self.data:    # 修改已有标签
                 self.data[key]['tags'] = new_tags
-                self.save_data(self.data)    # 保存修改
                 self.show_cur_file()    # 刷新文件显示
                 self.msg(f'文件标签修改为：{new_tags}')
             else:   # 新增标签存储
                 self.data[key] = {}
                 self.data[key]['tags'] = new_tags
-                self.save_data(self.data)    # 保存修改
                 self.show_cur_file()    # 刷新文件显示
                 self.msg(f'文件新增标签：{new_tags}')
+
+    def save_mod(self):
+        '''
+        按钮btn_save_mod的回调函数：保存所有标签修改
+        '''
+        self.save_data(self.data)
+        self.msg('所有修改已保存！',show_time=3)
 
     def update_list(self, ev=None, exts=['pdf']):
         '''

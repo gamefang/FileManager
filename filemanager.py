@@ -22,13 +22,36 @@ class FileManager(object):
     STYLE_CBTN_FONT = ('simhei', 16)
     STYLE_NORMAL_FONT = ('simhei', 12)
 
+    def __init__(self):
+        '''
+        初始化
+        '''
+        self.data = self.load_data()   # 加载json对象
+
+    def is_empty(self,data):
+        '''
+        检查json数据是否为空
+        @param data: json第二层字典嵌套数据
+        @return: bool
+        '''
+        for k,v in data.items():
+            if any(v):  # 有任何数据即返回false
+                return False
+        return True # 全空返回True
+
     def load_data(self):
         '''
-        加载json字典
+        加载json字典，并进行优化，去除空项
         @return: python字典对象
         '''
         with open(self.DATA_FILE,'r',encoding='utf8') as file:
-            return json.load(file)
+            raw_data = json.load(file)
+        data = {}
+        for k,v in raw_data.items():
+            if self.is_empty(v):    # 优化去除空项
+                continue
+            data[k] = v
+        return data
 
     def save_data(self,data):
         '''
@@ -67,6 +90,15 @@ class FileManager(object):
         rel_path = path_key.replace('|','/')
         return os.path.abspath(rel_path)
 
+    def get_infos(self,full_path):
+        '''
+        根据绝对路径获取文件的json存储额外信息
+        @param full_path: 文件的绝对路径
+        @return: json存储中的信息字典
+        '''
+        key = self.path_to_key(full_path)
+        return self.data.get(key)
+
     def get_file_list(self,base_folder,is_recur=False):
         '''
         获取文件路径列表
@@ -82,7 +114,8 @@ class FileManager(object):
             li = []
             for root,dirs,files in os.walk(base_folder):
                 for file in files:
-                    li.append(os.path.abspath(file))
+                    fp = os.path.join(root,file)
+                    li.append(fp)
             return li
         else:
             return [os.path.abspath(rel_path) for rel_path in os.listdir()]

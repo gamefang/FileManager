@@ -25,20 +25,5 @@
       "test"
     ],
     "group": null
-  },
-  "filemanager.py": {
-    "tags": []
-  },
-  "filesdata.json": {
-    "tags": []
-  },
-  "folder1": {
-    "tags": []
-  },
-  "folder2": {
-    "tags": []
-  },
-  "ui.py": {
-    "tags": []
   }
 }
