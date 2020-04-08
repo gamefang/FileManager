@@ -66,3 +66,50 @@ class FileManager(object):
         '''
         rel_path = path_key.replace('|','/')
         return os.path.abspath(rel_path)
+
+    def get_file_list(self,base_folder,is_recur=False):
+        '''
+        获取文件路径列表
+        @param base_folder: 起始的文件夹路径
+        @param is_recur: 是否递归处理
+        @return: 文件绝对路径的列表
+        '''
+        if os.path.isdir(base_folder):  # 路径错误检测
+            os.chdir(base_folder)
+        else:
+            return f'Not a folder or not exist: {base_folder}'
+        if is_recur:    # 递归获取
+            li = []
+            for root,dirs,files in os.walk(base_folder):
+                for file in files:
+                    li.append(os.path.abspath(file))
+            return li
+        else:
+            return [os.path.abspath(rel_path) for rel_path in os.listdir()]
+
+    def filtered_file_list(self,file_list,no_folder=False,white_exts=[],black_exts=[]):
+        '''
+        获取过滤过的文件路径列表
+        @param file_list: 文件绝对路径的列表
+        @param no_folder: 移除文件夹（同时移除不存在路径）
+        @param white_exts: 后缀类型的白名单（必须保留）
+        @param black_exts: 后缀类型的黑名单（必不保留），黑名单优先
+        @return: 按要求过滤后的文件绝对路径的列表
+        '''
+        li = []
+        for file in file_list:
+            if no_folder and os.path.isdir(file):   # 移除文件夹（同时移除不存在路径）
+                continue
+            ext = os.path.splitext(file)[1][1:]
+            if ext in black_exts:   # 移除黑名单
+                continue
+            if ext not in white_exts:   #  非白名单跳过
+                continue
+            li.append(file)
+        return li
+
+if __name__ == "__main__":
+    fm = FileManager()
+    raw_list = fm.get_file_list(r'E:\projects\FileManager',is_recur=True)
+    filtered_list = fm.filtered_file_list(raw_list,white_exts=['txt','doc'])
+    print(filtered_list)
