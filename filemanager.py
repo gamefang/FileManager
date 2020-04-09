@@ -27,6 +27,8 @@ class FileManager(object):
         初始化
         '''
         self.data = self.load_data()   # 加载json对象
+        self.cur_folder = self.BASE_FULL_PATH   # 当前所在树状目录
+        self.filelist = self.get_file_list(self.cur_folder) # 当前筛选的文件列表（完整路径）
 
     def is_empty(self,data):
         '''

@@ -46,7 +46,7 @@ class UIFileManager(FileManager):
                                            text = '标签',
                                            value = 0,
                                            variable = self.v_sheet,
-                                           command = self.change_sheet,
+                                           command = self.cb_change_sheet,
                                            bg = 'blue',
                                            font=self.STYLE_BTN_FONT,
                                            )
@@ -54,7 +54,7 @@ class UIFileManager(FileManager):
                                             text = '类型',
                                             value = 1,
                                             variable = self.v_sheet,
-                                            command = self.change_sheet,
+                                            command = self.cb_change_sheet,
                                             bg = 'blue',
                                             font=self.STYLE_BTN_FONT,
                                             )
@@ -62,7 +62,7 @@ class UIFileManager(FileManager):
                                            text = '设置',
                                            value = 2,
                                            variable = self.v_sheet,
-                                           command = self.change_sheet,
+                                           command = self.cb_change_sheet,
                                            bg = 'blue',
                                            font=self.STYLE_BTN_FONT,
                                            )
@@ -77,7 +77,7 @@ class UIFileManager(FileManager):
                                    )
         # 按钮：保存修改
         self.btn_save_mod = Button(text='保存',
-                                   command=self.save_mod,
+                                   command=self.cb_save_mod,
                                    activebackground='blue',
                                    font=self.STYLE_BTN_FONT,
                                    )
@@ -118,7 +118,7 @@ class UIFileManager(FileManager):
                            )
         # 按钮：标签修改
         self.btn_tags_mod = Button(text='修改',
-                                   command=self.modify_tags,
+                                   command=self.cb_modify_tags,
                                    activebackground='blue',
                                    font=self.STYLE_BTN_FONT,
                                    )
@@ -135,28 +135,31 @@ class UIFileManager(FileManager):
         self.cbtn_recur = Checkbutton(self.wd,
                                       text = '递归展开',
                                       variable = self.v_is_recur,
-                                      command = self.toggle_recur,
+                                      command = self.cb_toggle_recur,
                                       font = self.STYLE_CBTN_FONT,
                                       )
 
         ################## 右侧 ##################
         # 字符串变量：当前目录名（相对路径）
-        self.v_cur_folder = StringVar(self.wd)
-        self.v_cur_folder.set(os.curdir)
-        # 标签：当前文件目录路径
-        self.lb_cur_fp = Label(self.wd,
-                               fg='purple',
-                               font=('arial', 12, 'bold'),
-                               )
-        self.lb_cur_fp.place(x=self.UI_RIGHT_BASE_X,
-                             y=self.UI_BASE_Y,
-                             )
+        self.v_cur_folder = StringVar()
+        self.v_cur_folder.set(self.cur_folder)
+        # # 标签：当前文件目录路径
+        # self.lb_cur_fp = Label(self.wd,
+        #                        fg='purple',
+        #                        font=('arial', 12, 'bold'),
+        #                        )
+        # self.lb_cur_fp.place(x=self.UI_RIGHT_BASE_X,
+        #                      y=self.UI_BASE_Y,
+        #                      )
 
         # 按钮：向上一层
         self.btn_prev = Button(text='<',
-                               command=self.go_prev,
+                               command=self.cb_go_prev,
                                activebackground='blue',
                                )
+        # self.btn_prev.bind('<BackSpace>', # 死活绑不上
+        #                     self.go_prev,
+        #                     )
         self.btn_prev.place(x=self.UI_RIGHT_BASE_X,
                             y=self.UI_BASE_Y + 30,
                             )
@@ -166,7 +169,7 @@ class UIFileManager(FileManager):
                            textvariable=self.v_cur_folder,    # 链接当前目录名
                            )
         self.en_fp.bind('<Return>',
-                        self.update_list,   # 回车后执行update_list
+                        self.cb_input_dir,
                         )
         self.en_fp.place(x=self.UI_RIGHT_BASE_X + 30,
                          y=self.UI_BASE_Y + 33,
@@ -186,10 +189,10 @@ class UIFileManager(FileManager):
                                 selectmode = EXTENDED,
                                 )
         self.libo_fps.bind('<ButtonRelease-1>',
-                           self.show_cur_file,    # 鼠标单击列表框任一行内容，显示当前文件信息
+                           self.cb_show_cur_file,    # 鼠标单击列表框任一行内容，显示当前文件信息
                            )
         self.libo_fps.bind('<Double-1>',
-                           self.change_dir,    # 鼠标双击列表框任一行内容，回调change_dir
+                           self.cb_change_dir,    # 鼠标双击列表框任一行内容，回调change_dir
                            )
         self.sb_fps.config(command=self.libo_fps.yview)  # 执行竖直滚动条的滚动
         self.libo_fps.pack(side=LEFT, fill=BOTH)
@@ -200,7 +203,7 @@ class UIFileManager(FileManager):
 
         # 按钮：打开所选文件
         self.btn_open = Button(text='打开',
-                               command=self.open_file,
+                               command=self.cb_open_file,
                                activebackground='blue',
                                font=self.STYLE_BTN_FONT,
                                )
@@ -244,7 +247,7 @@ class UIFileManager(FileManager):
         self.v_tips.set(str(content))
         self.wd.update()
 
-    def change_sheet(self):
+    def cb_change_sheet(self):
         '''
         单选按钮rbtn_sheet*的回调函数：更新sheet页UI元素
         '''
@@ -272,7 +275,7 @@ class UIFileManager(FileManager):
                                   y=self.UI_BASE_Y + 40,
                                   )
 
-    def toggle_recur(self):
+    def cb_toggle_recur(self):
         '''
         复选按钮cbtn_recur的回调函数：切换是否递归展开的选项
         '''
@@ -281,7 +284,7 @@ class UIFileManager(FileManager):
         else:
             self.msg('普通树状浏览')
 
-    def open_file(self, ev=None):
+    def cb_open_file(self, ev=None):
         '''
         按钮btn_open的回调函数：打开所选文件(多选打开第一个)
         '''
@@ -290,7 +293,7 @@ class UIFileManager(FileManager):
             os.startfile(fn)
             print('open: ',os.path.abspath(fn))
 
-    def show_cur_file(self, ev=None):
+    def cb_show_cur_file(self, ev=None):
         '''
         列表框libo_fps单击的回调函数：显示当前文件信息(多选显示第一个)
         '''
@@ -308,24 +311,46 @@ class UIFileManager(FileManager):
                 self.v_cur_file_tags.set('')    # 清空标签修改区
             self.msg(full_path)
 
-    def change_dir(self, ev=None):
+    def change_dir(self,full_path):
+        '''
+        变更当前路径并刷新
+        '''
+        self.v_cur_folder.set(full_path)
+        self.cur_folder = full_path
+        self.filelist = self.get_file_list(self.cur_folder)
+        self.update_list()
+        print('path change to: ',full_path)
+
+    def cb_change_dir(self, ev=None):
         '''
         列表框libo_fps双击的回调函数：变更当前路径，并切换当前目录
         '''
-        fn = self.cur_select_single_file
-        if fn:
-            self.v_cur_folder.set(fn)
-            self.update_list()
-            print('path change to: ',os.path.abspath(os.curdir))
+        fn = os.path.abspath(self.cur_select_single_file)
+        if os.path.isdir(fn):
+            self.change_dir(fn)
+        else:
+            os.startfile(fn)
+            print('open: ',fn)
 
-    def go_prev(self, ev=None):
+    def cb_go_prev(self, ev=None):
         '''
         按钮btn_prev的回调函数：目录向上一层
         '''
-        self.v_cur_folder.set(os.pardir)
-        self.update_list()
+        tar_folder = os.path.abspath(os.pardir)
+        if os.path.isdir(tar_folder):
+            self.change_dir(tar_folder)
 
-    def modify_tags(self):
+    def cb_input_dir(self,ev=None):
+        '''
+        输入框en_fp回车的回调函数：变更路径
+        '''
+        full_path = self.v_cur_folder.get()
+        if os.path.isdir(full_path):
+            self.change_dir(full_path)
+        else:   # TODO 路径错误需还原
+            pass
+
+    def cb_modify_tags(self):
         '''
         按钮btn_tags_mod的回调函数：修改标签
         '''
@@ -344,14 +369,23 @@ class UIFileManager(FileManager):
                 self.show_cur_file()    # 刷新文件显示
                 self.msg(f'文件新增标签：{new_tags}')
 
-    def save_mod(self):
+    def cb_save_mod(self):
         '''
         按钮btn_save_mod的回调函数：保存所有标签修改
         '''
         self.save_data(self.data)
         self.msg('所有修改已保存！',show_time=3)
 
-    def update_list(self, ev=None, exts=['pdf']):
+    def update_list(self,ev=None):
+        '''
+        刷新列表框内文件
+        '''
+        self.libo_fps.delete(0, END)    # 清空列表框
+        for file in self.filelist:
+            self.libo_fps.insert(END, os.path.split(file)[1])
+        self.v_cur_folder.set(self.cur_folder)
+
+    def update_list_old(self, ev=None, exts=['pdf']):
         '''
         刷新列表框内文件
         @param exts: 后缀 TODO
@@ -380,7 +414,6 @@ class UIFileManager(FileManager):
             for file in files:
                 self.libo_fps.insert(END, file)
             self.v_cur_folder.set(os.curdir)
-
 
 if __name__ == "__main__":
     fm = UIFileManager()
