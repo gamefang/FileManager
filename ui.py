@@ -290,8 +290,7 @@ class UIFileManager(FileManager):
         '''
         fn = self.cur_select_single_file
         if fn:
-            os.startfile(fn)
-            print('open: ',os.path.abspath(fn))
+            self.msg(self.open_file(fn),show_time=3)
 
     def cb_show_cur_file(self, ev=None):
         '''
@@ -321,6 +320,19 @@ class UIFileManager(FileManager):
         self.update_list()
         print('path change to: ',full_path)
 
+    def open_file(self,full_path):
+        '''
+        打开指定文件
+        '''
+        try:
+            os.startfile(full_path)
+        except Exception as e:
+            print(e)
+            if e.errno == 22:
+                return '该文件在本系统内暂无打开方式'
+        else:
+            return f'open: {full_path}'
+    
     def cb_change_dir(self, ev=None):
         '''
         列表框libo_fps双击的回调函数：变更当前路径，并切换当前目录
@@ -329,8 +341,7 @@ class UIFileManager(FileManager):
         if os.path.isdir(fn):
             self.change_dir(fn)
         else:
-            os.startfile(fn)
-            print('open: ',fn)
+            self.msg(self.open_file(fn),show_time=3)
 
     def cb_go_prev(self, ev=None):
         '''
@@ -401,7 +412,7 @@ class UIFileManager(FileManager):
             self.v_cur_folder.set(self.last)  # 重新设置输入框为当前目录
             self.wd.update()
         elif not os.path.isdir(tdir):    # 路径存在且为文件，双击打开文件
-            self.open_file()
+            self.msg(self.open_file(tdir),show_time=3)
         else:   # 路径存在且为文件夹，双击进入文件夹
             # 确定文件
             files = os.listdir(tdir)
