@@ -4,6 +4,7 @@ import os
 import time
 import threading
 from tkinter import *
+from tkinter import ttk
 
 from filemanager import FileManager
 
@@ -211,6 +212,52 @@ class UIFileManager(FileManager):
                             y=self.UI_BASE_Y + 460,
                             )
 
+
+
+        ########## 表格形式 ##########
+        # 框架：表格框架
+        self.fm_tv_fps = Frame(self.wd)
+        # 滚动条：表格纵向滚动条
+        self.sb_tv_fps = Scrollbar(self.fm_tv_fps)
+        self.sb_tv_fps.pack(side=RIGHT, fill=Y)
+        # 表格：主体定义
+        self.tv_fps = ttk.Treeview(self.fm_tv_fps,
+                                   height = 20,
+                                   yscrollcommand=self.sb_tv_fps.set,   # 竖直滚动
+                                   show = 'headings',   # 显示表头
+                                   columns = ('fn','type','tags'),  # 表格字段
+                                   selectmode = EXTENDED,   # 支持多选
+                                   )
+        # 表格：定义列宽和对齐
+        self.tv_fps.column('fn',
+                           width = 150, # 字段位置起始x
+                           anchor = 'w',    # 左对齐
+                           )
+        self.tv_fps.column('type',
+                           width = 200,
+                           anchor = 'center',   # 居中
+                           )
+        self.tv_fps.column('tags',
+                           width = 250,
+                           anchor = 'center',
+                           )
+        # 表格：定义表头
+        self.tv_fps.heading('fn',text='文件名')
+        self.tv_fps.heading('type',text='类型')
+        self.tv_fps.heading('tags',text='标签')
+
+        self.sb_fps.config(command=self.tv_fps.yview)  # 执行竖直滚动条的滚动
+        self.tv_fps.pack(side=LEFT, fill=BOTH)
+        self.fm_tv_fps.place(relx=0.25,
+                             rely=0.15,
+                             relwidth = 0.5,
+                             relheight = 0.7,
+                             )
+        # 表格：填充测试数据
+        for i in range(40):
+            self.tv_fps.insert('',i,values=(f'c:/windows/{i}.txt','文本文件',f'{i}'))
+
+
     @property
     def cur_select_files(self):
         '''
@@ -332,7 +379,7 @@ class UIFileManager(FileManager):
                 return '该文件在本系统内暂无打开方式'
         else:
             return f'open: {full_path}'
-    
+
     def cb_change_dir(self, ev=None):
         '''
         列表框libo_fps双击的回调函数：变更当前路径，并切换当前目录
