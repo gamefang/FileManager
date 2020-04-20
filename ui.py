@@ -228,6 +228,9 @@ class UIFileManager(FileManager):
                                    columns = ('fn','type','tags'),  # 表格字段
                                    selectmode = EXTENDED,   # 支持多选
                                    )
+        self.tv_fps.bind('<ButtonRelease-1>',
+                           self.cb_tv_show_cur_file,    # 鼠标单击列表框任一行内容，显示当前文件信息
+                           )
         # 表格：定义列宽和对齐
         self.tv_fps.column('fn',
                            width = 150, # 字段位置起始x
@@ -248,15 +251,17 @@ class UIFileManager(FileManager):
 
         self.sb_fps.config(command=self.tv_fps.yview)  # 执行竖直滚动条的滚动
         self.tv_fps.pack(side=LEFT, fill=BOTH)
-        self.fm_tv_fps.place(relx=0.25,
-                             rely=0.15,
+        self.fm_tv_fps.place(relx=0.45,
+                             rely=0.25,
                              relwidth = 0.5,
-                             relheight = 0.7,
+                             relheight = 0.6,
                              )
         # 表格：填充测试数据
-        for i in range(40):
-            self.tv_fps.insert('',i,values=(f'c:/windows/{i}.txt','文本文件',f'{i}'))
-
+        # for i in range(40):
+        #     self.tv_fps.insert('',i,values=(f'c:/windows/{i}.txt','文本文件',f'{i}'))
+        # self.tv_fps.insert('',0,values=(f'E:/projects/FileManager/试验/测试.txt','文本文件','1'))
+        # self.tv_fps.insert('',1,values=(f'E:/projects/FileManager/folder1/new.txt','文本文件','2'))
+        self.tv_update_list()
 
     @property
     def cur_select_files(self):
@@ -339,13 +344,24 @@ class UIFileManager(FileManager):
         if fn:
             self.msg(self.open_file(fn),show_time=3)
 
-    def cb_show_cur_file(self, ev=None):
+    @property
+    def cur_tv_selection(self):
         '''
-        列表框libo_fps单击的回调函数：显示当前文件信息(多选显示第一个)
+        返回表格控件tv_fps当前选定的内容元组
         '''
-        fn = self.cur_select_single_file
-        if fn:
-            full_path = os.path.abspath(fn)
+        result = []
+        for data in self.tv_fps.selection():
+            data_list = self.tv_fps.item(data,'value')
+            result.append(data_list[0])
+        return result
+
+    def cb_tv_show_cur_file(self, ev=None):
+        '''
+        表格tv_fps单击的回调函数：显示当前文件信息(多选显示第一个)
+        '''
+        selection = self.cur_tv_selection
+        if selection:
+            full_path = os.path.abspath(selection[0])
             self.libo_tags.delete(0, END)   # 清空标签框
             infos = self.get_infos(full_path)
             if infos:
@@ -443,6 +459,22 @@ class UIFileManager(FileManager):
             self.libo_fps.insert(END, os.path.split(file)[1])
         self.v_cur_folder.set(self.cur_folder)
 
+    def tv_update_list(self):
+        '''
+        刷新表格tv_fps内文件
+        '''
+        # 清空现有表格
+        for data in self.tv_fps.get_children():
+            self.tv_fps.delete(data)
+        # 装入文件信息
+        for num,file in enumerate(self.filelist):
+            self.tv_fps.insert('',num,values=(os.path.split(file)[1],'文本文件','1'))
+        self.v_cur_folder.set(self.cur_folder)
+
+
+
+
+    # TODO UI完成后作废
     def update_list_old(self, ev=None, exts=['pdf']):
         '''
         刷新列表框内文件
@@ -472,6 +504,24 @@ class UIFileManager(FileManager):
             for file in files:
                 self.libo_fps.insert(END, file)
             self.v_cur_folder.set(os.curdir)
+
+    def cb_show_cur_file(self, ev=None):
+        '''
+        列表框libo_fps单击的回调函数：显示当前文件信息(多选显示第一个)
+        '''
+        fn = self.cur_select_single_file
+        if fn:
+            full_path = os.path.abspath(fn)
+            self.libo_tags.delete(0, END)   # 清空标签框
+            infos = self.get_infos(full_path)
+            if infos:
+                tags = infos.get('tags')
+                for tag in tags:
+                    self.libo_tags.insert(END, tag) # 标签框
+                self.v_cur_file_tags.set(','.join(tags))    # 标签修改区
+            else:
+                self.v_cur_file_tags.set('')    # 清空标签修改区
+            self.msg(full_path)
 
 if __name__ == "__main__":
     fm = UIFileManager()
