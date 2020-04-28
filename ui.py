@@ -6,7 +6,7 @@ import threading
 from tkinter import *
 from tkinter import ttk
 
-from filemanager import FileManager
+from filemanager import FileManager,FileObject
 
 class UIFileManager(FileManager):
     '''
@@ -430,7 +430,8 @@ class UIFileManager(FileManager):
             self.tv_fps.delete(data)
         # 装入文件信息
         for num,file in enumerate(self.filelist):
-            self.tv_fps.insert('',num,values=(os.path.split(file)[1],'文本文件','1',file))
+            fo = FileObject(file)
+            self.tv_fps.insert('',num,values=(fo.name,fo.typ,'1',fo.full_path))
         self.v_cur_folder.set(self.cur_folder)
 
 if __name__ == "__main__":

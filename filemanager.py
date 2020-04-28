@@ -143,8 +143,72 @@ class FileManager(object):
             li.append(file)
         return li
 
+class FileObject(object):
+    '''
+    文件对象
+    '''
+    # 文件类型通用字典
+    TYPE_DICT = {
+        'doc':'Word文档',
+        'docx':'Word文档',
+        'xls':'Excel文档',
+        'xlsx':'Excel文档',
+        'ppt':'PPT文档',
+        'pptx':'PPT文档',
+        'pdf':'PDF文档',
+        'zip':'压缩包',
+        'rar':'压缩包',
+        'csv':'数据文件',
+        'json':'数据文件',
+        'dwg':'CAD图纸',
+        'rvt':'BIM图纸',
+    }
+
+    def __init__(self,full_path):
+        '''
+        已完整路径初始化
+        '''
+        self.full_path = full_path
+        self.isdir = os.path.isdir(full_path)
+
+    @property
+    def typ(self):
+        '''
+        文件类型（字符串）
+        '''
+        if self.isdir:
+            return '文件夹'
+        else:
+            ext = os.path.splitext(self.full_path)[1][1:]
+            return self.TYPE_DICT.get(ext,f'{ext}文件')
+
+    @property
+    def name(self):
+        '''
+        文件/文件夹名（字符串）
+        '''
+        return os.path.split(self.full_path)[1]
+
+    # @property
+    # def tags(self):
+    #     '''
+    #     文件标签
+    #     '''
+    #     return
+
+    @property
+    def key(self):
+        rel_path = os.path.relpath(self.full_path,FileManager.BASE_FULL_PATH)
+        if '/' in rel_path:
+            li = rel_path.split('/')
+        elif '\\' in rel_path:
+            li = rel_path.split('\\')
+        else:
+            return rel_path
+        return '|'.join(li)
+
 if __name__ == "__main__":
     fm = FileManager()
-    raw_list = fm.get_file_list(r'E:\projects\FileManager',is_recur=True)
+    raw_list = fm.get_file_list(r'E:\projects\FileManager')
     filtered_list = fm.filtered_file_list(raw_list,white_exts=['txt','doc'])
     print(filtered_list)
