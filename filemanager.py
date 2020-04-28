@@ -28,6 +28,7 @@ class FileManager(object):
         '''
         self.data = self.load_data()   # 加载json对象
         self.cur_folder = self.BASE_FULL_PATH   # 当前所在树状目录
+        self.is_recur = False   # 文件是否递归展开
         self.filelist = self.get_file_list(self.cur_folder) # 当前筛选的文件列表（完整路径）
 
     def is_empty(self,data):
@@ -101,18 +102,17 @@ class FileManager(object):
         key = self.path_to_key(full_path)
         return self.data.get(key)
 
-    def get_file_list(self,base_folder,is_recur=False):
+    def get_file_list(self,base_folder):
         '''
         获取文件路径列表
         @param base_folder: 起始的文件夹路径
-        @param is_recur: 是否递归处理
         @return: 文件绝对路径的列表
         '''
         if os.path.isdir(base_folder):  # 路径错误检测
             os.chdir(base_folder)
         else:
             return f'Not a folder or not exist: {base_folder}'
-        if is_recur:    # 递归获取
+        if self.is_recur:    # 递归获取
             li = []
             for root,dirs,files in os.walk(base_folder):
                 for file in files:

@@ -130,12 +130,9 @@ class UIFileManager(FileManager):
         ##### 标签页：类型 #####
 
         ##### 标签页：设置 #####
-        # 整数变量：是否递归展开（0-不展开，1-展开）
-        self.v_is_recur = IntVar(0)
         # 复选按钮：是否递归展开
         self.cbtn_recur = Checkbutton(self.wd,
                                       text = '递归展开',
-                                      variable = self.v_is_recur,
                                       command = self.cb_toggle_recur,
                                       font = self.STYLE_CBTN_FONT,
                                       )
@@ -178,7 +175,7 @@ class UIFileManager(FileManager):
                                    height = 20,
                                    yscrollcommand=self.sb_tv_fps.set,   # 竖直滚动
                                    show = 'headings',   # 显示表头
-                                   columns = ('fn','type','tags'),  # 表格字段
+                                   columns = ('fn','type','tags','fullpath'),  # 表格字段
                                    selectmode = EXTENDED,   # 支持多选
                                    )
         self.tv_fps.bind('<ButtonRelease-1>',
@@ -200,10 +197,15 @@ class UIFileManager(FileManager):
                            width = 250,
                            anchor = 'center',
                            )
+        self.tv_fps.column('fullpath',
+                           width = 300,
+                           anchor = 'w',
+                           )
         # 表格：定义表头
         self.tv_fps.heading('fn',text='文件名')
         self.tv_fps.heading('type',text='类型')
         self.tv_fps.heading('tags',text='标签')
+        self.tv_fps.heading('fullpath',text='完整路径')
 
         self.sb_tv_fps.config(command=self.tv_fps.yview)  # 执行竖直滚动条的滚动
         self.tv_fps.pack(side=LEFT, fill=BOTH)
@@ -232,26 +234,25 @@ class UIFileManager(FileManager):
 
     ############# 内置属性 #############
     @property
-    def cur_tv_selection(self):
+    def cur_tv_data(self):
         '''
-        返回表格控件tv_fps当前选定的内容元组
+        返回当前选择的所有表格的内容元组
         '''
         result = []
         for data in self.tv_fps.selection():
             data_list = self.tv_fps.item(data,'value')
-            result.append(data_list[0])
+            result.append(data_list)
         return result
 
     @property
-    def cur_select_fp(self):
+    def cur_single_tv_data(self):
         '''
-        返回当前表格内选定的绝对路径
+        返回当前选择的单项表格的内容元组
+        [文件名,类型,标签,完整路径]
         '''
-        selection = self.cur_tv_selection
-        if selection:
-            fn = selection[0]
-            print(fn,self.cur_folder)
-            return os.path.join(self.cur_folder,fn)
+        datas = self.cur_tv_data
+        if datas:
+            return datas[0]
 
     ############# 回调方法 #############
     def cb_change_sheet(self):
@@ -286,16 +287,18 @@ class UIFileManager(FileManager):
         '''
         复选按钮cbtn_recur的回调函数：切换是否递归展开的选项
         '''
-        if self.v_is_recur.get():   # 需要递归展开
+        self.is_recur = not self.is_recur
+        if self.is_recur:
             self.msg('修改为递归展开')
         else:
-            self.msg('普通树状浏览')
+            self.msg('只显示当前目录文件')
+        self.change_dir()   # 刷新文件目录
 
     def cb_open_file(self, ev=None):
         '''
         按钮btn_open的回调函数：打开所选文件(多选打开第一个)
         '''
-        fp = self.cur_select_fp
+        fp = self.cur_single_tv_data[3]
         if fp:
             self.msg(self.open_file(fp),show_time=3)
 
@@ -303,9 +306,9 @@ class UIFileManager(FileManager):
         '''
         表格tv_fps单击的回调函数：显示当前文件信息(多选显示第一个)
         '''
-        selection = self.cur_tv_selection
-        if selection:
-            full_path = os.path.abspath(selection[0])
+        datas = self.cur_single_tv_data
+        if datas:
+            full_path = os.path.abspath(datas[3])
             self.libo_tags.delete(0, END)   # 清空标签框
             infos = self.get_infos(full_path)
             if infos:
@@ -317,11 +320,12 @@ class UIFileManager(FileManager):
                 self.v_cur_file_tags.set('')    # 清空标签修改区
             self.msg(full_path)
 
+
     def cb_change_dir(self, ev=None):
         '''
         表格tv_fps双击的回调函数：变更当前路径，并切换当前目录
         '''
-        fp = self.cur_select_fp
+        fp = self.cur_single_tv_data[3]
         if os.path.isdir(fp):
             self.change_dir(fp)
         else:
@@ -351,7 +355,7 @@ class UIFileManager(FileManager):
         '''
         new_tags = self.v_cur_file_tags.get().split(',')
         new_tags = [item for item in new_tags if item]  # 去除空项
-        files = self.cur_tv_selection   # TODO 可能错误
+        files = [item[3] for item in self.cur_tv_data]
         for file in files:  # 支持批量修改
             key = self.path_to_key(os.path.abspath(file))
             if key in self.data:    # 修改已有标签
@@ -392,10 +396,12 @@ class UIFileManager(FileManager):
         self.v_tips.set(str(content))
         self.wd.update()
 
-    def change_dir(self,full_path):
+    def change_dir(self,full_path=None):
         '''
         变更当前路径并刷新
         '''
+        if not full_path:
+            full_path = self.cur_folder
         self.v_cur_folder.set(full_path)
         self.cur_folder = full_path
         self.filelist = self.get_file_list(self.cur_folder)
@@ -424,9 +430,9 @@ class UIFileManager(FileManager):
             self.tv_fps.delete(data)
         # 装入文件信息
         for num,file in enumerate(self.filelist):
-            self.tv_fps.insert('',num,values=(os.path.split(file)[1],'文本文件','1'))
+            self.tv_fps.insert('',num,values=(os.path.split(file)[1],'文本文件','1',file))
         self.v_cur_folder.set(self.cur_folder)
-        
+
 if __name__ == "__main__":
     fm = UIFileManager()
     mainloop()
