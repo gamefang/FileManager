@@ -98,9 +98,9 @@ class UIFileManager(FileManager):
                                  font=self.STYLE_BTN_FONT,
                                  selectmode = EXTENDED,
                                  )
-        # self.libo_tags.bind('<Double-1>',
-        #                    self.show_by_tag,    # 鼠标双击标签，按标签排序文件
-        #                    )
+        self.libo_tags.bind('<Double-1>',
+                           self.cb_shift_tag,    # 鼠标双击标签，按标签排序文件
+                           )
         self.sb_tags.config(command=self.libo_tags.yview)  # 执行竖直滚动条的滚动
         self.libo_tags.pack(side=LEFT, fill=BOTH)
         self.fm_tags.place(x=self.UI_LEFT_BASE_X,
@@ -254,6 +254,13 @@ class UIFileManager(FileManager):
         if datas:
             return datas[0]
 
+    @property
+    def cur_selected_single_tag(self):
+        '''
+        返回当前选择的单项标签内容
+        '''
+        return self.libo_tags.get(self.libo_tags.curselection())
+
     ############# 回调方法 #############
     def cb_change_sheet(self):
         '''
@@ -367,6 +374,18 @@ class UIFileManager(FileManager):
                 self.data[key]['tags'] = new_tags
                 self.cb_tv_show_cur_file()    # 刷新文件显示
                 self.msg(f'文件新增标签：{new_tags}')
+
+    def cb_shift_tag(self,ev=None):
+        '''
+        列表框libo_tags回调函数：切换标签 TODO 按标签筛选
+        '''
+        cur_tag = self.cur_selected_single_tag
+        print(f'selected: {cur_tag}')
+        if cur_tag in self.cur_tags:
+            self.cur_tags.remove(cur_tag)
+        else:
+            self.cur_tags.append(cur_tag)
+        print(self.cur_tags)
 
     def cb_save_mod(self):
         '''

@@ -29,6 +29,7 @@ class FileManager(object):
         self.data = self.load_data()   # 加载json对象
         self.cur_folder = self.BASE_FULL_PATH   # 当前所在树状目录
         self.is_recur = False   # 文件是否递归展开
+        self.cur_tags = []  # 当前标签筛选规则
         self.filelist = self.get_file_list(self.cur_folder) # 当前筛选的文件列表（完整路径）
 
     def is_empty(self,data):
