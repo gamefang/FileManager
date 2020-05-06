@@ -186,19 +186,19 @@ class UIFileManager(FileManager):
                          )
         # 表格：定义列宽和对齐
         self.tv_fps.column('fn',
-                           width = 150, # 字段位置起始x
+                           width = 150, # 字段初始宽度
                            anchor = 'w',    # 左对齐
                            )
         self.tv_fps.column('type',
-                           width = 200,
+                           width = 100,
                            anchor = 'center',   # 居中
                            )
         self.tv_fps.column('tags',
-                           width = 250,
+                           width = 150,
                            anchor = 'center',
                            )
         self.tv_fps.column('fullpath',
-                           width = 300,
+                           width = 150,
                            anchor = 'w',
                            )
         # 表格：定义表头
@@ -360,12 +360,12 @@ class UIFileManager(FileManager):
             key = self.path_to_key(os.path.abspath(file))
             if key in self.data:    # 修改已有标签
                 self.data[key]['tags'] = new_tags
-                self.show_cur_file()    # 刷新文件显示
+                self.cb_tv_show_cur_file()    # 刷新文件显示
                 self.msg(f'文件标签修改为：{new_tags}')
             else:   # 新增标签存储
                 self.data[key] = {}
                 self.data[key]['tags'] = new_tags
-                self.show_cur_file()    # 刷新文件显示
+                self.cb_tv_show_cur_file()    # 刷新文件显示
                 self.msg(f'文件新增标签：{new_tags}')
 
     def cb_save_mod(self):
@@ -431,7 +431,7 @@ class UIFileManager(FileManager):
         # 装入文件信息
         for num,file in enumerate(self.filelist):
             fo = FileObject(file)
-            self.tv_fps.insert('',num,values=(fo.name,fo.typ,'1',fo.full_path))
+            self.tv_fps.insert('',num,values=(fo.name,fo.typ,fo.tags_str,fo.full_path))
         self.v_cur_folder.set(self.cur_folder)
 
 if __name__ == "__main__":

@@ -147,6 +147,8 @@ class FileObject(object):
     '''
     文件对象
     '''
+    # 加载文件管理工具对象
+    FM = FileManager()
     # 文件类型通用字典
     TYPE_DICT = {
         'doc':'Word文档',
@@ -189,16 +191,9 @@ class FileObject(object):
         '''
         return os.path.split(self.full_path)[1]
 
-    # @property
-    # def tags(self):
-    #     '''
-    #     文件标签
-    #     '''
-    #     return
-
     @property
     def key(self):
-        rel_path = os.path.relpath(self.full_path,FileManager.BASE_FULL_PATH)
+        rel_path = os.path.relpath(self.full_path,self.FM.BASE_FULL_PATH)
         if '/' in rel_path:
             li = rel_path.split('/')
         elif '\\' in rel_path:
@@ -207,8 +202,36 @@ class FileObject(object):
             return rel_path
         return '|'.join(li)
 
+    # 以下涉及文件管理工具的json存储
+    @property
+    def saved_data(self):
+        '''
+        文件在管理工具中的存储数据
+        '''
+        return self.FM.data.get(self.key) or {}
+    @property
+    def tags(self):
+        '''
+        文件在管理工具中的标签(list)
+        '''
+        return self.saved_data.get('tags') or []
+    @property
+    def tags_str(self):
+        '''
+        仅用于展示的标签
+        '''
+        return ','.join(self.tags)
+    @property
+    def group(self):
+        '''
+        文件在管理工具中的分组数据(bool)
+        '''
+        return self.saved_data.get('group')
+
 if __name__ == "__main__":
     fm = FileManager()
     raw_list = fm.get_file_list(r'E:\projects\FileManager')
     filtered_list = fm.filtered_file_list(raw_list,white_exts=['txt','doc'])
     print(filtered_list)
+
+    fo=FileObject(r'E:\projects\FileManager\试验\测试.txt')
