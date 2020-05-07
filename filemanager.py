@@ -1,36 +1,35 @@
 # -*-coding: utf-8-*-
 
-import os
-import json
+import os   # FileData
+import json # FileData
+import threading    # SingletonType
 
-class FileManager(object):
+class SingletonType(type):
     '''
-    文件管理工具逻辑
+    实现单例的元类
     '''
-    # 常量定义
+    _instance_lock = threading.Lock()
+    def __call__(cls, *args, **kwargs):
+        if not hasattr(cls, "_instance"):
+            with SingletonType._instance_lock:
+                if not hasattr(cls, "_instance"):
+                    cls._instance = super(SingletonType,cls).__call__(*args, **kwargs)
+        return cls._instance
+
+class FileData(metaclass=SingletonType):
+    '''
+    文件数据（单例）
+    '''
     # 工具所在基础路径
     BASE_FULL_PATH = os.path.abspath(os.curdir)
     # 信息文件相对路径
     DATA_FILE = os.path.join(BASE_FULL_PATH,'filesdata.json')
-    # 左、右侧UI的起始x、y值
-    UI_LEFT_BASE_X = 20
-    UI_RIGHT_BASE_X = 450
-    UI_BASE_Y = 60
-    # 默认样式
-    STYLE_LABEL_FONT = ('simhei', 16)
-    STYLE_BTN_FONT = ('simhei', 18)
-    STYLE_CBTN_FONT = ('simhei', 16)
-    STYLE_NORMAL_FONT = ('simhei', 12)
 
     def __init__(self):
         '''
         初始化
         '''
         self.data = self.load_data()   # 加载json对象
-        self.cur_folder = self.BASE_FULL_PATH   # 当前所在树状目录
-        self.is_recur = False   # 文件是否递归展开
-        self.cur_tags = []  # 当前标签筛选规则
-        self.filelist = self.get_file_list(self.cur_folder) # 当前筛选的文件列表（完整路径）
 
     def is_empty(self,data):
         '''
@@ -70,13 +69,139 @@ class FileManager(object):
                 ensure_ascii=False, # 不转译汉字
                 )
 
+class FileObject(object):
+    '''
+    文件对象
+    '''
+    # 文件类型通用字典
+    TYPE_DICT = {
+        'doc':'Word文档',
+        'docx':'Word文档',
+        'xls':'Excel文档',
+        'xlsx':'Excel文档',
+        'ppt':'PPT文档',
+        'pptx':'PPT文档',
+        'pdf':'PDF文档',
+        'zip':'压缩包',
+        'rar':'压缩包',
+        'csv':'数据文件',
+        'json':'数据文件',
+        'dwg':'CAD图纸',
+        'rvt':'BIM图纸',
+    }
+    # 加载文件数据对象
+    fdata = FileData()
+
+    def __init__(self,full_path):
+        '''
+        已完整路径初始化
+        '''
+        self.full_path = full_path
+        self.isdir = os.path.isdir(full_path)
+
+    @property
+    def typ(self):
+        '''
+        文件类型（字符串）
+        '''
+        if self.isdir:
+            return '文件夹'
+        else:
+            ext = os.path.splitext(self.full_path)[1][1:]
+            return self.TYPE_DICT.get(ext,f'{ext}文件')
+
+    @property
+    def name(self):
+        '''
+        文件/文件夹名（字符串）
+        '''
+        return os.path.split(self.full_path)[1]
+
+    @property
+    def key(self):
+        rel_path = os.path.relpath(self.full_path,self.fdata.BASE_FULL_PATH)
+        if '/' in rel_path:
+            li = rel_path.split('/')
+        elif '\\' in rel_path:
+            li = rel_path.split('\\')
+        else:
+            return rel_path
+        return '|'.join(li)
+
+    # 以下涉及文件管理工具的json存储
+    @property
+    def saved_data(self):
+        '''
+        文件在管理工具中的存储数据
+        '''
+        return self.fdata.data.get(self.key) or {}
+    @property
+    def tags(self):
+        '''
+        文件在管理工具中的标签(list)
+        '''
+        return self.saved_data.get('tags') or []
+    @property
+    def tags_str(self):
+        '''
+        仅用于展示的标签
+        '''
+        return ','.join(self.tags)
+    @property
+    def group(self):
+        '''
+        文件在管理工具中的分组数据(bool)
+        '''
+        return self.saved_data.get('group')
+
+    def is_fit_tags(self,taglist=[]):
+        '''
+        判断文件是否符合tag的筛选条件
+        @param taglist: tag列表，为空则符合条件
+        @return: bool
+        '''
+        if not taglist:
+            return True
+        else:
+            for tag in taglist:
+                if tag in self.tags:
+                    return True
+            return False
+
+class FileManager(metaclass=SingletonType):
+    '''
+    文件管理工具逻辑(单例)
+    '''
+    # 常量定义
+    # 左、右侧UI的起始x、y值
+    UI_LEFT_BASE_X = 20
+    UI_RIGHT_BASE_X = 450
+    UI_BASE_Y = 60
+    # 默认样式
+    STYLE_LABEL_FONT = ('simhei', 16)
+    STYLE_BTN_FONT = ('simhei', 18)
+    STYLE_CBTN_FONT = ('simhei', 16)
+    STYLE_NORMAL_FONT = ('simhei', 12)
+    # 加载文件数据对象
+    fdata = FileData()
+
+    def __init__(self):
+        '''
+        初始化
+        '''
+        self.data = self.fdata.data   # 加载json对象
+        self.cur_folder = self.fdata.BASE_FULL_PATH   # 当前所在树状目录
+        self.is_recur = False   # 文件是否递归展开
+        self.cur_tags = []  # 当前标签筛选规则
+        self.filelist = self.get_file_list(self.cur_folder) # 当前筛选的文件列表（完整路径）
+
     def path_to_key(self,full_path):
         '''
         根据绝对路径，获取与json字典对应的路径索引key
         @param full_path: 文件的绝对路径
         @return: 返回适用于json字典索引的路径，以|分隔
         '''
-        rel_path = os.path.relpath(full_path,self.BASE_FULL_PATH)
+        rel_path = os.path.relpath(full_path,self.fdata.BASE_FULL_PATH)
         if '/' in rel_path:
             li = rel_path.split('/')
         elif '\\' in rel_path:
@@ -118,10 +243,19 @@ class FileManager(object):
             for root,dirs,files in os.walk(base_folder):
                 for file in files:
                     fp = os.path.join(root,file)
-                    li.append(fp)
+                    # 筛选标签
+                    fo = FileObject(fp)
+                    if fo.is_fit_tags(self.cur_tags):
+                        li.append(fp)
             return li
         else:
-            return [os.path.abspath(rel_path) for rel_path in os.listdir()]
+            li = []
+            for rel_path in os.listdir():
+                fp = os.path.abspath(rel_path)
+                fo = FileObject(fp)
+                if fo.is_fit_tags(self.cur_tags):
+                    li.append(fp)
+            return li
 
     def filtered_file_list(self,file_list,no_folder=False,white_exts=[],black_exts=[]):
         '''
@@ -143,91 +277,6 @@ class FileManager(object):
                 continue
             li.append(file)
         return li
-
-class FileObject(object):
-    '''
-    文件对象
-    '''
-    # 加载文件管理工具对象
-    FM = FileManager()
-    # 文件类型通用字典
-    TYPE_DICT = {
-        'doc':'Word文档',
-        'docx':'Word文档',
-        'xls':'Excel文档',
-        'xlsx':'Excel文档',
-        'ppt':'PPT文档',
-        'pptx':'PPT文档',
-        'pdf':'PDF文档',
-        'zip':'压缩包',
-        'rar':'压缩包',
-        'csv':'数据文件',
-        'json':'数据文件',
-        'dwg':'CAD图纸',
-        'rvt':'BIM图纸',
-    }
-
-    def __init__(self,full_path):
-        '''
-        已完整路径初始化
-        '''
-        self.full_path = full_path
-        self.isdir = os.path.isdir(full_path)
-
-    @property
-    def typ(self):
-        '''
-        文件类型（字符串）
-        '''
-        if self.isdir:
-            return '文件夹'
-        else:
-            ext = os.path.splitext(self.full_path)[1][1:]
-            return self.TYPE_DICT.get(ext,f'{ext}文件')
-
-    @property
-    def name(self):
-        '''
-        文件/文件夹名（字符串）
-        '''
-        return os.path.split(self.full_path)[1]
-
-    @property
-    def key(self):
-        rel_path = os.path.relpath(self.full_path,self.FM.BASE_FULL_PATH)
-        if '/' in rel_path:
-            li = rel_path.split('/')
-        elif '\\' in rel_path:
-            li = rel_path.split('\\')
-        else:
-            return rel_path
-        return '|'.join(li)
-
-    # 以下涉及文件管理工具的json存储
-    @property
-    def saved_data(self):
-        '''
-        文件在管理工具中的存储数据
-        '''
-        return self.FM.data.get(self.key) or {}
-    @property
-    def tags(self):
-        '''
-        文件在管理工具中的标签(list)
-        '''
-        return self.saved_data.get('tags') or []
-    @property
-    def tags_str(self):
-        '''
-        仅用于展示的标签
-        '''
-        return ','.join(self.tags)
-    @property
-    def group(self):
-        '''
-        文件在管理工具中的分组数据(bool)
-        '''
-        return self.saved_data.get('group')
 
 if __name__ == "__main__":
     fm = FileManager()

@@ -6,11 +6,11 @@ import threading
 from tkinter import *
 from tkinter import ttk
 
-from filemanager import FileManager,FileObject
+from filemanager import FileManager,FileObject,SingletonType
 
-class UIFileManager(FileManager):
+class UIFileManager(FileManager,metaclass=SingletonType):
     '''
-    文件管理工具UI
+    文件管理工具UI(单例)
     '''
 
     def __init__(self):
@@ -377,21 +377,21 @@ class UIFileManager(FileManager):
 
     def cb_shift_tag(self,ev=None):
         '''
-        列表框libo_tags回调函数：切换标签 TODO 按标签筛选
+        列表框libo_tags回调函数：切换标签
         '''
         cur_tag = self.cur_selected_single_tag
-        print(f'selected: {cur_tag}')
         if cur_tag in self.cur_tags:
             self.cur_tags.remove(cur_tag)
         else:
             self.cur_tags.append(cur_tag)
-        print(self.cur_tags)
+        self.msg(f'标签筛选规则：{self.cur_tags}')
+        self.change_dir()   # 刷新文件目录
 
     def cb_save_mod(self):
         '''
         按钮btn_save_mod的回调函数：保存所有标签修改
         '''
-        self.save_data(self.data)
+        self.fdata.save_data(self.data)
         self.msg('所有修改已保存！',show_time=3)
 
     ############# 普通方法 #############
