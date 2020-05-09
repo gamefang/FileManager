@@ -4,6 +4,8 @@ import os   # FileData
 import json # FileData
 import threading    # SingletonType
 
+from timeit_deco import timeit
+
 class SingletonType(type):
     '''
     实现单例的元类
@@ -228,6 +230,7 @@ class FileManager(metaclass=SingletonType):
         key = self.path_to_key(full_path)
         return self.data.get(key)
 
+    @timeit
     def get_file_list(self,base_folder):
         '''
         获取文件路径列表
@@ -238,24 +241,22 @@ class FileManager(metaclass=SingletonType):
             os.chdir(base_folder)
         else:
             return f'Not a folder or not exist: {base_folder}'
+        li = set()
         if self.is_recur:    # 递归获取
-            li = []
             for root,dirs,files in os.walk(base_folder):
                 for file in files:
                     fp = os.path.join(root,file)
                     # 筛选标签
                     fo = FileObject(fp)
                     if fo.is_fit_tags(self.cur_tags):
-                        li.append(fp)
-            return li
+                        li.add(fp)
         else:
-            li = []
             for rel_path in os.listdir():
                 fp = os.path.abspath(rel_path)
                 fo = FileObject(fp)
                 if fo.is_fit_tags(self.cur_tags):
-                    li.append(fp)
-            return li
+                    li.add(fp)
+        return li
 
     def filtered_file_list(self,file_list,no_folder=False,white_exts=[],black_exts=[]):
         '''

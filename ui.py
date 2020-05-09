@@ -7,6 +7,7 @@ from tkinter import *
 from tkinter import ttk
 
 from filemanager import FileManager,FileObject,SingletonType
+from timeit_deco import timeit
 
 class UIFileManager(FileManager,metaclass=SingletonType):
     '''
@@ -476,6 +477,7 @@ class UIFileManager(FileManager,metaclass=SingletonType):
         else:
             return f'open: {full_path}'
 
+    @timeit
     def tv_update_list(self):
         '''
         刷新表格tv_fps内文件
