@@ -42,9 +42,9 @@ class UIFileManager(FileManager,metaclass=SingletonType):
         ################## 左侧 ##################
         # 整数变量：当前标签页
         self.v_sheet = IntVar(0)
-        # 单选按钮：标签页：标签、类型、其它
+        # 单选按钮：标签页
         self.rbtn_sheet_tags = Radiobutton(self.wd,
-                                           text = '标签',
+                                           text = '树状',
                                            value = 0,
                                            variable = self.v_sheet,
                                            command = self.cb_change_sheet,
@@ -52,7 +52,7 @@ class UIFileManager(FileManager,metaclass=SingletonType):
                                            font=self.STYLE_BTN_FONT,
                                            )
         self.rbtn_sheet_types = Radiobutton(self.wd,
-                                            text = '类型',
+                                            text = '信息',
                                             value = 1,
                                             variable = self.v_sheet,
                                             command = self.cb_change_sheet,
@@ -60,7 +60,7 @@ class UIFileManager(FileManager,metaclass=SingletonType):
                                             font=self.STYLE_BTN_FONT,
                                             )
         self.rbtn_sheet_cfgs = Radiobutton(self.wd,
-                                           text = '设置',
+                                           text = '筛选',
                                            value = 2,
                                            variable = self.v_sheet,
                                            command = self.cb_change_sheet,
@@ -76,17 +76,11 @@ class UIFileManager(FileManager,metaclass=SingletonType):
         self.rbtn_sheet_cfgs.place(x=self.UI_LEFT_BASE_X + 200,
                                    y=self.UI_BASE_Y,
                                    )
-        # 按钮：保存修改
-        self.btn_save_mod = Button(text='保存',
-                                   command=self.cb_save_mod,
-                                   activebackground='blue',
-                                   font=self.STYLE_BTN_FONT,
-                                   )
-        self.btn_save_mod.place(x=self.UI_LEFT_BASE_X + 300,
-                                y=self.UI_BASE_Y,
-                                )
 
-        ##### 标签页：标签 #####
+        ##### 标签页：树状 #####
+
+
+        ##### 标签页：信息 #####
         # 框架：标签框架
         self.fm_tags = Frame(self.wd)
         # 滚动条：在这里是对标签提供滚动功能
@@ -103,10 +97,6 @@ class UIFileManager(FileManager,metaclass=SingletonType):
                            )
         self.sb_tags.config(command=self.libo_tags.yview)  # 执行竖直滚动条的滚动
         self.libo_tags.pack(side=LEFT, fill=BOTH)
-        self.fm_tags.place(x=self.UI_LEFT_BASE_X,
-                           y=self.UI_BASE_Y + 80,
-                           )
-
         # 字符串变量：当前文件标签
         self.v_cur_file_tags = StringVar()
         # 输入框：当前文件标签
@@ -114,28 +104,42 @@ class UIFileManager(FileManager,metaclass=SingletonType):
                              width=35,   # 输入框宽
                              textvariable=self.v_cur_file_tags,
                              )
-        self.en_tags.place(x=self.UI_LEFT_BASE_X,
-                           y=self.UI_BASE_Y + 350,
-                           )
         # 按钮：标签修改
         self.btn_tags_mod = Button(text='修改',
                                    command=self.cb_modify_tags,
                                    activebackground='blue',
                                    font=self.STYLE_BTN_FONT,
                                    )
-        self.btn_tags_mod.place(x=self.UI_LEFT_BASE_X,
-                                y=self.UI_BASE_Y + 400,
-                                )
+        # 按钮：保存修改
+        self.btn_save_mod = Button(text='保存',
+                                   command=self.cb_save_mod,
+                                   activebackground='blue',
+                                   font=self.STYLE_BTN_FONT,
+                                   )
 
-        ##### 标签页：类型 #####
-
-        ##### 标签页：设置 #####
+        ##### 标签页：筛选 #####
         # 复选按钮：是否递归展开
         self.cbtn_recur = Checkbutton(self.wd,
                                       text = '递归展开',
                                       command = self.cb_toggle_recur,
                                       font = self.STYLE_CBTN_FONT,
                                       )
+        # 输入框：标签筛选规则
+        # 字符串变量：当前标签筛选规则
+        self.v_cur_tags = StringVar()
+        self.en_tag_filter = Entry(self.wd,
+                             width=35,   # 输入框宽
+                             textvariable=self.v_cur_tags,
+                             )
+        self.en_tag_filter.bind('<Return>',
+                                self.cb_do_filter,
+                                )
+        # 按钮：筛选
+        self.btn_filter = Button(text='筛选',
+                                 command=self.cb_do_filter,
+                                 activebackground='blue',
+                                 font=self.STYLE_BTN_FONT,
+                                 )
 
         ################## 右侧 ##################
         # 字符串变量：当前目录名（绝对路径）
@@ -214,12 +218,6 @@ class UIFileManager(FileManager,metaclass=SingletonType):
                              relwidth = 0.5,
                              relheight = 0.6,
                              )
-        # 表格：填充测试数据
-        # for i in range(40):
-        #     self.tv_fps.insert('',i,values=(f'c:/windows/{i}.txt','文本文件',f'{i}'))
-        # self.tv_fps.insert('',0,values=(f'E:/projects/FileManager/试验/测试.txt','文本文件','1'))
-        # self.tv_fps.insert('',1,values=(f'E:/projects/FileManager/folder1/new.txt','文本文件','2'))
-        self.tv_update_list()
 
         # 按钮：打开所选文件
         self.btn_open = Button(text='打开',
@@ -231,6 +229,10 @@ class UIFileManager(FileManager,metaclass=SingletonType):
                             y=self.UI_BASE_Y + 460,
                             )
 
+        # 初始化执行
+        self.tv_update_list()   # 初始化表格
+        self.v_sheet.set(1) # 初始化标签页
+        self.cb_change_sheet()
 
     ############# 内置属性 #############
     @property
@@ -268,26 +270,45 @@ class UIFileManager(FileManager,metaclass=SingletonType):
         '''
         # 隐藏所有sheet页元素
         self.fm_tags.place_forget()
-        self.cbtn_recur.place_forget()
-        self.btn_tags_mod.place_forget()
         self.en_tags.place_forget()
+        self.btn_tags_mod.place_forget()
+        self.btn_save_mod.place_forget()
+        self.cbtn_recur.place_forget()
+        self.en_tag_filter.place_forget()
+        self.btn_filter.place_forget()
         # 展示本sheet页元素
         sheet_num = self.v_sheet.get()
-        if sheet_num == 0:  # 标签页
+        if sheet_num == 0:  # 树状
+            pass    # TODO 树状文件结构浏览
+        elif sheet_num == 1:    # 信息
+            # 框架：标签框架
             self.fm_tags.place(x=self.UI_LEFT_BASE_X,
                                y=self.UI_BASE_Y + 80,
                                )
+            # 输入框：当前文件标签
             self.en_tags.place(x=self.UI_LEFT_BASE_X,
                                y=self.UI_BASE_Y + 350,
                                )
+            # 按钮：标签修改
             self.btn_tags_mod.place(x=self.UI_LEFT_BASE_X,
                                     y=self.UI_BASE_Y + 400,
                                     )
-        elif sheet_num == 1:    # 类型页
-            pass
-        elif sheet_num == 2:    # 设置页
+            # 按钮：保存修改
+            self.btn_save_mod.place(x=self.UI_LEFT_BASE_X + 300,
+                                    y=self.UI_BASE_Y,
+                                    )
+        elif sheet_num == 2:    # 筛选
+            # 复选按钮：是否递归展开
             self.cbtn_recur.place(x=self.UI_LEFT_BASE_X,
                                   y=self.UI_BASE_Y + 40,
+                                  )
+            # 输入框：标签筛选规则
+            self.en_tag_filter.place(x=self.UI_LEFT_BASE_X,
+                                    y=self.UI_BASE_Y + 100,
+                                    )
+            # 按钮：标签筛选
+            self.btn_filter.place(x=self.UI_LEFT_BASE_X,
+                                  y=self.UI_BASE_Y + 400,
                                   )
 
     def cb_toggle_recur(self):
@@ -386,6 +407,21 @@ class UIFileManager(FileManager,metaclass=SingletonType):
             self.cur_tags.append(cur_tag)
         self.msg(f'标签筛选规则：{self.cur_tags}')
         self.change_dir()   # 刷新文件目录
+        self.v_cur_tags.set(','.join(self.cur_tags))    # 更新标签筛选显示
+
+    def cb_do_filter(self, ev=None):
+        '''
+        按钮btn_filter回调函数：按标签执行筛选
+        '''
+        userinput = self.v_cur_tags.get().strip()
+        if userinput:
+            self.cur_tags = userinput.split(',')
+            self.msg(f'标签筛选规则：{self.cur_tags}')
+        else:
+            self.cur_tags = []
+            self.msg('清除标签筛选规则')
+        self.change_dir()   # 刷新文件目录
+        self.v_cur_tags.set(','.join(self.cur_tags))    # 更新标签筛选显示
 
     def cb_save_mod(self):
         '''
