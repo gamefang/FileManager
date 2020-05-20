@@ -461,8 +461,23 @@ class UIFileManager(FileManager,metaclass=SingletonType):
         self.v_cur_folder.set(full_path)
         self.cur_folder = full_path
         self.filelist = self.get_file_list(self.cur_folder)
-        self.tv_update_list()
+        if self.is_thread_updating():
+            self.msg('操作过于频繁，请稍后再试！',show_time=3)
+            return
+        global thread_update
+        thread_update = threading.Thread(target=self.tv_update_list)
+        thread_update.start()    # 多线程提升速度（TODO 部分行为需要禁止）
+        # self.tv_update_list()
         print('path change to: ',full_path)
+        
+    @staticmethod
+    def is_thread_updating():
+        '''
+        当前是否在执行刷新线程
+        '''
+        if 'thread_update' in globals():
+            return thread_update.is_alive()
+        return False
 
     def open_file(self,full_path):
         '''
